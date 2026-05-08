@@ -48,13 +48,13 @@
             <span class="hint">Upload or paste a GraphQL signal mutation</span>
           </label>
           <div id="signal-drop-zone" class="drop-zone drop-zone--compact" role="button" tabindex="0" aria-label="Upload blank signal JSON">
-            <p>Drag &amp; drop a .json file, or <label for="signal-file-input" class="file-label">browse</label></p>
+            <p>Drag &amp; drop a GraphQL signal mutation, or <label for="signal-file-input" class="file-label">browse</label></p>
             <input type="file" id="signal-file-input" accept=".json" hidden />
           </div>
           <div class="or-divider"><span>or</span></div>
           <textarea
             id="signal-json-input"
-            placeholder='{"signal":{"appKey":"","identifiableAttributes":{"email":""},"signalContent":{"signalType":"addToCart","orderId":""}}}'
+            placeholder="Paste GraphQL signal mutation here..."
             spellcheck="false"
             autocomplete="off"
             aria-label="Paste blank signal JSON"
