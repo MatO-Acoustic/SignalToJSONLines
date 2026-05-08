@@ -196,8 +196,14 @@
 
   // ── Step 1: Paste JSON ───────────────────────────────────────
 
+  function autoResizeTextarea() {
+    signalJsonInput.style.height = 'auto';
+    signalJsonInput.style.height = signalJsonInput.scrollHeight + 'px';
+  }
+
   let _pasteDebounce = null;
   signalJsonInput.addEventListener('input', () => {
+    autoResizeTextarea();
     clearTimeout(_pasteDebounce);
     const val = signalJsonInput.value.trim();
 
