@@ -23,16 +23,20 @@ Connect's SFTP and local-storage signal import expects a `.jsonl` file where eac
 You will need:
 
 - **Your app key** — provided during Connect Pro onboarding, or generated via the Connect interface (Premium/Ultimate)
-- **A blank signal template** — a `.json` file describing the signal structure (see below)
+- **A signal template** — paste your GraphQL `createSignal` mutation directly, or upload/paste a blank `.json` signal file (see below)
 - **Your source data file** — `.csv`, `.xlsx`, or `.xls`
 
 ---
 
-## Blank signal template
+## Signal template
 
-The tool reads a blank signal `.json` file to extract the field structure. This tells it what signal type you're sending, what identifier to use, and what content fields to expect.
+The tool extracts field structure from either a GraphQL `createSignal` mutation or a blank signal JSON file. Paste either directly into the text area in Step 1, or upload a `.json` file.
 
-### Format
+### GraphQL mutation (recommended)
+
+Paste your `createSignal` mutation as-is. The tool strips the GraphQL wrapper, blanks all values, and extracts the field list. Commented-out fields (`#field: ...`) in `signalContent` are included as optional mapping targets; commented-out identifiers are included in the identifier picker but not selected by default. If your mutation includes an `appKey` value, it will be pre-filled automatically.
+
+### JSON blank signal format
 
 ```json
 {
@@ -56,7 +60,7 @@ The tool reads a blank signal `.json` file to extract the field structure. This 
 | Field | Required | Notes |
 |---|---|---|
 | `appKey` | Yes | Can be left blank in the template — you'll enter it in the tool |
-| `identifiableAttributes` | Yes | One identifier key only: `email`, `sms`, `whatsapp`, or `contactKey` |
+| `identifiableAttributes` | Yes | One or more identifier keys — `email`, `sms`, `whatsapp`, or a contact key (any other name). `sms` and `whatsapp` cannot be combined with each other; all other combinations are valid. |
 | `signalContent.signalType` | Yes | The Connect signal type (e.g. `order`, `addToCart`, `pageView`) |
 | Other `signalContent` fields | Signal-dependent | Add any fields your signal requires or optionally accepts |
 
@@ -94,6 +98,12 @@ Each line in the downloaded file follows the Connect import structure:
 {"signal":{"appKey":"app_abc123","identifiableAttributes":{"email":"user@example.com"},"signalContent":{"signalType":"order","orderId":"ORD-001","orderTotal":"149.99","currency":"GBP"},"sessionId":"SESS-AAA"}}
 ```
 
+When multiple identifiers are selected (e.g. contact key + email), both appear in `identifiableAttributes`:
+
+```json
+{"signal":{"appKey":"app_abc123","identifiableAttributes":{"contactKey":"cust-12345","email":"user@example.com"},"signalContent":{"signalType":"order","orderId":"ORD-001"}}}
+```
+
 - `signalType` is stamped from your template — the same for every row
 - `sessionId` is omitted entirely when the source cell is empty
 - The downloaded file is named `{signalType}_{date}.jsonl`
@@ -113,7 +123,7 @@ Check **Test mode** in Step 1 to add `"test": true` to every signal. Test signal
 | Max file size | 500 MB per import job |
 | SFTP file retention | Files are deleted from the SFTP server 14 days after upload |
 | Activity feed window | Signals must have a `signalTimestamp` within the last 30 days to appear in contact feeds |
-| Identifier types | `email`, `sms` (E.164 format: `+[country][area][number]`), `whatsapp`, `contactKey` |
+| Identifier types | `email`, `sms` (E.164 format: `+[country][area][number]`), `whatsapp`, contact key (any custom name). Multiple can be combined except `sms` + `whatsapp`. |
 | Batch size (API) | Up to 500 signals per call (not applicable to file import) |
 
 ### Contact creation behaviour

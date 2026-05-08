@@ -500,6 +500,46 @@ textarea {
 }
 
 /* ============================================================
+   Identifier picker (multi-select checkboxes)
+   ============================================================ */
+.identifier-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1rem;
+  margin-top: 0.15rem;
+}
+
+.id-check-label {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--violet);
+  cursor: pointer;
+  user-select: none;
+  transition: opacity 0.15s;
+}
+
+.id-check-label input[type="checkbox"] {
+  width: 0.95rem;
+  height: 0.95rem;
+  accent-color: var(--periwinkle);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.id-check-label.disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.id-check-label.disabled input[type="checkbox"] {
+  cursor: not-allowed;
+}
+
+/* ============================================================
    Or divider
    ============================================================ */
 .or-divider {

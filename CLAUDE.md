@@ -23,25 +23,28 @@ Pure static site — no build step, no framework, no server. All processing is c
 
 The user provides:
 1. **App key** — required string, stamped onto every output row as `signal.appKey`
-2. **Blank signal template** — a `.json` file matching the Connect signal structure (see format below). The tool parses it to extract the signal type, identifier type, and all signal content fields.
+2. **Signal template** — either uploaded as a `.json` file or pasted directly into the textarea. Accepts two formats:
+   - **JSON signal payload** — `{"signal": {...}}` or the inner object directly
+   - **GraphQL `createSignal` mutation** — the full mutation text. `parseGraphQL()` in `app.js` parses it line-by-line using a section stack, extracts all fields, blanks values, keeps `signalType`, and includes commented-out optional `signalContent` fields. If an `appKey` is present in the mutation it pre-fills the app key input.
 3. **Test flag** — optional checkbox; adds `"test": true` to every output row
 
-Blank signal template format (the tool accepts `{"signal": {...}}` or the inner object directly):
-```json
-{
-  "signal": {
-    "appKey": "",
-    "identifiableAttributes": { "email": "" },
-    "signalContent": {
-      "signalType": "order",
-      "orderId": "",
-      "orderTotal": ""
-    }
-  }
-}
-```
+Known `identifiableAttributes` keys: `email`, `sms`, `whatsapp`. Any other key (e.g. `contactKey`, `loyaltyId`, `customerId`) is treated as a contact key and labelled `(contact key)` in the picker.
 
-Valid `identifiableAttributes` keys: `email`, `sms`, `whatsapp`, `contactKey`.
+Signal type casing confirmed: camelCase — e.g. `addToCart`, `browseAbandonment`, `surveyQualificationFromActivity`.
+
+## Identifier picker
+
+When the parsed template contains more than one identifier type, checkboxes replace the static identifier chip. The user can select one or more identifiers simultaneously. Only constraint: `sms` and `whatsapp` are mutually exclusive (checking one disables the other). All other combinations are valid, including contact key + email, contact key + sms, email + sms, etc.
+
+State: `activeIdentifiers: string[]` (replaces the old single `identifierType` string). `setIdentifiers(types)` rebuilds the `identifier:X` entries in `signalFields`, re-inits the mapper, and re-renders. Single-identifier templates show static text only. `isStep1Ready()` requires `activeIdentifiers.length > 0`.
+
+## signalTimestamp auto-injection
+
+`content:signalTimestamp` is always injected into `signalFields` after the template content fields, regardless of whether it appears in the template. Labelled `signalTimestamp (30-day window)` in the mapper to hint that signals need a timestamp within the last 30 days to appear in the contact activity feed.
+
+## Reset
+
+"↺ Start over" button in the header clears all state, form inputs, file inputs, mapper, and hides steps 3–5. Calls `Mapper.reset()` and scrolls to top.
 
 ## Field prefix system (mapper.js)
 

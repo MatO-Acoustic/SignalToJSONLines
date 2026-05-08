@@ -45,7 +45,7 @@
         <div class="field-group">
           <label>
             Blank signal template <span class="required-star">*</span>
-            <span class="hint">Upload or paste a blank .json signal to extract the field structure</span>
+            <span class="hint">Upload or paste a GraphQL signal mutation</span>
           </label>
           <div id="signal-drop-zone" class="drop-zone drop-zone--compact" role="button" tabindex="0" aria-label="Upload blank signal JSON">
             <p>Drag &amp; drop a .json file, or <label for="signal-file-input" class="file-label">browse</label></p>
@@ -72,6 +72,7 @@
             <div class="signal-meta-chip">
               <span class="meta-label">Identifier</span>
               <span id="signal-identifier-display" class="meta-value"></span>
+              <div id="identifier-picker" class="identifier-picker hidden" role="group" aria-label="Choose identifier types"></div>
             </div>
           </div>
           <div id="signal-content-fields" class="tag-group"></div>

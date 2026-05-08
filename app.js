@@ -2,20 +2,24 @@
   'use strict';
 
   // ── State ──────────────────────────────────────────────────
-  let appKey         = '';
-  let signalType     = '';
-  let identifierType = '';
-  let testFlag       = false;
-  let signalFields   = []; // prefixed: ["identifier:email", "content:orderId", "session:sessionId", ...]
-  let parsedHeaders  = [];
-  let parsedData     = [];
+  const KNOWN_IDENTIFIERS = new Set(['email', 'sms', 'whatsapp']);
+
+  let appKey               = '';
+  let signalType           = '';
+  let activeIdentifiers    = []; // currently selected identifier keys (one or more)
+  let availableIdentifiers = []; // all identifier types found in the template
+  let testFlag             = false;
+  let signalFields         = []; // prefixed: ["identifier:email", "content:orderId", "session:sessionId", ...]
+  let parsedHeaders        = [];
+  let parsedData           = [];
 
   // ── Element refs — Step 1 ───────────────────────────────────
   const appKeyInput       = document.getElementById('app-key');
   const signalDropZone    = document.getElementById('signal-drop-zone');
   const signalFileInput   = document.getElementById('signal-file-input');
-  const signalParseStatus = document.getElementById('signal-parse-status');
-  const signalJsonInput   = document.getElementById('signal-json-input');
+  const signalParseStatus  = document.getElementById('signal-parse-status');
+  const signalJsonInput    = document.getElementById('signal-json-input');
+  const identifierPickerEl = document.getElementById('identifier-picker');
   const signalSummary     = document.getElementById('signal-summary');
   const signalTypeDisplay = document.getElementById('signal-type-display');
   const signalIdDisplay   = document.getElementById('signal-identifier-display');
@@ -78,51 +82,109 @@
     }
   }
 
+  function parseGraphQL(text) {
+    const allIdentifiers  = [];   // every identifier key found (commented or not)
+    let defaultIdentifier = '';   // first uncommented one
+    const signalContent   = {};
+    let extractedAppKey   = '';
+    const sectionStack    = [];
+
+    for (const rawLine of text.split('\n')) {
+      const trimmed    = rawLine.trim();
+      const isOptional = trimmed.startsWith('#');
+      const line       = isOptional ? trimmed.slice(1).trim() : trimmed;
+
+      const openMatch = line.match(/^(\w+)\s*:\s*\{/);
+      if (openMatch) { sectionStack.push(openMatch[1]); continue; }
+      if (/^[)}\]],?$/.test(line)) { sectionStack.pop(); continue; }
+
+      const section = sectionStack[sectionStack.length - 1];
+      const cleaned = line.replace(/#.*$/, '').trim();
+      const m = cleaned.match(/^(\w+)\s*:\s*(?:"([^"]*)"|([\w.-]+))/);
+      if (!m) continue;
+
+      const key   = m[1];
+      const value = m[2] !== undefined ? m[2] : (m[3] || '');
+
+      if (section === 'signal' && key === 'appKey') {
+        extractedAppKey = value;
+      } else if (key === 'sessionId') {
+        // skip — tool always injects this
+      } else if (section === 'identifiableAttributes') {
+        allIdentifiers.push(key);
+        if (!isOptional && !defaultIdentifier) defaultIdentifier = key;
+      } else if (section === 'signalContent') {
+        signalContent[key] = key === 'signalType' ? value : '';
+      }
+    }
+
+    if (!allIdentifiers.length)
+      throw new Error('No identifiers found in identifiableAttributes.');
+    if (!Object.keys(signalContent).length)
+      throw new Error('No signalContent fields found in mutation.');
+
+    const activeIdentifier = defaultIdentifier || allIdentifiers[0];
+    return {
+      extractedAppKey,
+      allIdentifiers,
+      defaultIdentifier: activeIdentifier,
+      identifiableAttributes: { [activeIdentifier]: '' },
+      signalContent
+    };
+  }
+
   function parseSignalJson(text, sourceName) {
-    const parsed = JSON.parse(text);
+    let s;
+    let gqlAllIdentifiers = null;
 
-    // Accept {"signal": {...}} or the inner object directly
-    const s = parsed.signal || parsed;
-
-    if (!s.signalContent) {
-      throw new Error('No signalContent found. Make sure this is a valid blank signal.');
+    try {
+      const parsed = JSON.parse(text);
+      s = parsed.signal || parsed;
+    } catch (_) {
+      if (!/createSignal|identifiableAttributes/i.test(text)) {
+        throw new Error('Invalid format — paste a GraphQL signal mutation or a JSON signal payload.');
+      }
+      const gql = parseGraphQL(text);
+      if (gql.extractedAppKey && !appKeyInput.value.trim()) {
+        appKeyInput.value = gql.extractedAppKey;
+        appKey = gql.extractedAppKey;
+      }
+      gqlAllIdentifiers = gql.allIdentifiers;
+      s = { identifiableAttributes: gql.identifiableAttributes, signalContent: gql.signalContent };
     }
-    if (!s.identifiableAttributes) {
+
+    if (!s.signalContent)
+      throw new Error('No signalContent found. Make sure this is a valid signal.');
+    if (!s.identifiableAttributes)
       throw new Error('No identifiableAttributes found. The signal must include an identifier (email, sms, whatsapp, or contactKey).');
-    }
 
     const idKeys = Object.keys(s.identifiableAttributes);
-    if (!idKeys.length) {
+    if (!idKeys.length)
       throw new Error('identifiableAttributes is empty — must contain at least one identifier key.');
-    }
 
-    const extractedSignalType     = s.signalContent.signalType || '';
-    const extractedIdentifierType = idKeys[0];
+    const extractedSignalType = s.signalContent.signalType || '';
+    const defaultActive       = idKeys[0];
 
-    // Pre-populate appKey if the template carries one and the field is still empty
     if (s.appKey && !appKeyInput.value.trim()) {
       appKeyInput.value = s.appKey;
       appKey = s.appKey;
     }
 
-    // Build the prefixed field list
-    // 1. Contact identifier
-    const fields = [`identifier:${extractedIdentifierType}`];
-    // 2. Signal content fields (signalType is fixed — exclude from mapping)
+    const fields = [`identifier:${defaultActive}`];
     Object.keys(s.signalContent).forEach(k => {
       if (k !== 'signalType') fields.push(`content:${k}`);
     });
-    // 3. signalTimestamp: always available — affects 30-day activity feed window
     if (!fields.includes('content:signalTimestamp')) fields.push('content:signalTimestamp');
-    // 4. sessionId is always offered as optional
     fields.push('session:sessionId');
 
-    signalType     = extractedSignalType;
-    identifierType = extractedIdentifierType;
-    signalFields   = fields;
+    signalType           = extractedSignalType;
+    activeIdentifiers    = [defaultActive];
+    signalFields         = fields;
+    availableIdentifiers = gqlAllIdentifiers || idKeys;
 
     showSignalStatus(`${sourceName} — parsed successfully`, 'success');
     renderSignalSummary();
+    renderIdentifierPicker();
 
     if (parsedHeaders.length && isStep1Ready()) {
       Mapper.init(signalFields, parsedHeaders);
@@ -168,7 +230,6 @@
 
   function renderSignalSummary() {
     signalTypeDisplay.textContent = signalType || '(unknown)';
-    signalIdDisplay.textContent   = identifierType;
 
     signalFieldsList.innerHTML = '';
     signalFields.forEach(field => {
@@ -193,7 +254,7 @@
   // ── Step 1 state helpers ─────────────────────────────────────
 
   function isStep1Ready() {
-    return appKey.length > 0 && signalFields.length > 0;
+    return appKey.length > 0 && signalFields.length > 0 && activeIdentifiers.length > 0;
   }
 
   function onStep1Changed() {
@@ -353,12 +414,98 @@
     downloadHintEl.textContent = `${signalType || 'signal'}_${today}.jsonl`;
   }
 
+  // ── Identifier picker ────────────────────────────────────────
+
+  function renderIdentifierPicker() {
+    if (availableIdentifiers.length <= 1) {
+      signalIdDisplay.textContent = availableIdentifiers[0] || '';
+      signalIdDisplay.classList.remove('hidden');
+      identifierPickerEl.classList.add('hidden');
+      return;
+    }
+
+    identifierPickerEl.innerHTML = '';
+    availableIdentifiers.forEach(id => {
+      const isContactKey = !KNOWN_IDENTIFIERS.has(id);
+      const label = document.createElement('label');
+      label.className = 'id-check-label';
+
+      const cb = document.createElement('input');
+      cb.type    = 'checkbox';
+      cb.value   = id;
+      cb.checked = activeIdentifiers.includes(id);
+      cb.addEventListener('change', onIdentifierCheckboxChange);
+
+      label.appendChild(cb);
+      label.appendChild(document.createTextNode(' ' + id + (isContactKey ? ' (contact key)' : '')));
+      identifierPickerEl.appendChild(label);
+    });
+
+    signalIdDisplay.classList.add('hidden');
+    identifierPickerEl.classList.remove('hidden');
+    applyIdentifierConstraints();
+  }
+
+  function onIdentifierCheckboxChange() {
+    const checkboxes = [...identifierPickerEl.querySelectorAll('input[type=checkbox]')];
+    const checked    = checkboxes.filter(cb => cb.checked).map(cb => cb.value);
+    setIdentifiers(checked);
+    applyIdentifierConstraints();
+  }
+
+  function applyIdentifierConstraints() {
+    const checkboxes = [...identifierPickerEl.querySelectorAll('input[type=checkbox]')];
+    const checked    = checkboxes.filter(cb => cb.checked).map(cb => cb.value);
+
+    // Nothing checked — enable everything so the user can pick freely
+    if (checked.length === 0) {
+      checkboxes.forEach(cb => {
+        cb.disabled = false;
+        cb.closest('label').classList.remove('disabled');
+      });
+      return;
+    }
+
+    const hasSms      = checked.includes('sms');
+    const hasWhatsapp = checked.includes('whatsapp');
+
+    checkboxes.forEach(cb => {
+      if (cb.checked) {
+        cb.disabled = false;
+        cb.closest('label').classList.remove('disabled');
+        return;
+      }
+
+      const id      = cb.value;
+      const disable = (id === 'sms' && hasWhatsapp) || (id === 'whatsapp' && hasSms);
+
+      cb.disabled = disable;
+      cb.closest('label').classList.toggle('disabled', disable);
+    });
+  }
+
+  function setIdentifiers(types) {
+    activeIdentifiers = [...types];
+
+    const nonIdentifier = signalFields.filter(f => !f.startsWith('identifier:'));
+    signalFields = [...types.map(t => `identifier:${t}`), ...nonIdentifier];
+
+    signalIdDisplay.textContent = types.join(' + ');
+
+    if (parsedHeaders.length && isStep1Ready()) {
+      Mapper.init(signalFields, parsedHeaders);
+      renderMappingTable();
+      updatePreview();
+    }
+  }
+
   // ── Reset ─────────────────────────────────────────────────────
 
   resetBtn.addEventListener('click', resetApp);
 
   function resetApp() {
-    appKey = ''; signalType = ''; identifierType = ''; testFlag = false;
+    appKey = ''; signalType = ''; activeIdentifiers = []; testFlag = false;
+    availableIdentifiers = [];
     signalFields = []; parsedHeaders = []; parsedData = [];
 
     appKeyInput.value      = '';
@@ -371,6 +518,10 @@
 
     showSignalStatus('', '');
     signalSummary.classList.add('hidden');
+    signalIdDisplay.textContent = '';
+    signalIdDisplay.classList.remove('hidden');
+    identifierPickerEl.innerHTML = '';
+    identifierPickerEl.classList.add('hidden');
     showFileStatus('', '');
     mappingTbody.innerHTML = '';
 
