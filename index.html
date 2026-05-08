@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Signal to JSON Lines — Acoustic Connect</title>
+  <meta name="robots" content="noindex, nofollow" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
@@ -14,11 +15,14 @@
 
   <header>
     <div class="header-inner">
-      <div class="logo">
-        <img src="AcousticLogo.svg" alt="Acoustic" class="acoustic-logo" />
+      <div class="header-top">
+        <div class="logo">
+          <img src="AcousticLogo.svg" alt="Acoustic" class="acoustic-logo" />
+        </div>
+        <button id="reset-btn" class="btn-reset" title="Clear all data and start over">&#8635; Start over</button>
       </div>
       <h1>Signal &rarr; JSON Lines</h1>
-      <p class="subtitle">Generate a Connect SFTP batch file from your CSV or Excel data &mdash; all processing happens in your browser.</p>
+      <p class="subtitle">Generate a Connect Signal SFTP/S3 batch file from your CSV or Excel data</p>
     </div>
   </header>
 
@@ -41,12 +45,21 @@
         <div class="field-group">
           <label>
             Blank signal template <span class="required-star">*</span>
-            <span class="hint">Upload a blank .json signal file to extract the field structure</span>
+            <span class="hint">Upload or paste a blank .json signal to extract the field structure</span>
           </label>
           <div id="signal-drop-zone" class="drop-zone drop-zone--compact" role="button" tabindex="0" aria-label="Upload blank signal JSON">
             <p>Drag &amp; drop a .json file, or <label for="signal-file-input" class="file-label">browse</label></p>
             <input type="file" id="signal-file-input" accept=".json" hidden />
           </div>
+          <div class="or-divider"><span>or</span></div>
+          <textarea
+            id="signal-json-input"
+            rows="4"
+            placeholder='{"signal":{"appKey":"","identifiableAttributes":{"email":""},"signalContent":{"signalType":"addToCart","orderId":""}}}'
+            spellcheck="false"
+            autocomplete="off"
+            aria-label="Paste blank signal JSON"
+          ></textarea>
           <div id="signal-parse-status" class="file-status hidden"></div>
         </div>
 

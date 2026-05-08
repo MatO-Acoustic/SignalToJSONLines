@@ -46,8 +46,32 @@ header {
   padding: 0 1.5rem;
 }
 
-.logo {
+.header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 1.25rem;
+}
+
+.logo { line-height: 0; }
+
+.btn-reset {
+  background: transparent;
+  color: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: var(--radius);
+  font-family: var(--font-head);
+  font-size: 0.78rem;
+  font-weight: 500;
+  padding: 0.3rem 0.75rem;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+  white-space: nowrap;
+}
+
+.btn-reset:hover {
+  color: var(--white);
+  border-color: rgba(255, 255, 255, 0.6);
 }
 
 .acoustic-logo {
@@ -70,7 +94,7 @@ header h1 {
 .subtitle {
   margin: 0;
   font-size: 0.9rem;
-  color: var(--grey-dark);
+  color: rgba(255, 255, 255, 0.6);
   max-width: 560px;
 }
 
@@ -473,6 +497,26 @@ textarea {
 .required-star {
   color: #e74c3c;
   margin-left: 2px;
+}
+
+/* ============================================================
+   Or divider
+   ============================================================ */
+.or-divider {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: var(--grey-dark);
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+}
+
+.or-divider::before,
+.or-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--grey-mid);
 }
 
 /* ============================================================

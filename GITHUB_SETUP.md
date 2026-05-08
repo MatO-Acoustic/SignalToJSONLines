@@ -73,6 +73,16 @@ https://your-username.github.io/signal-to-jsonlines/
 
 ---
 
+## Troubleshooting
+
+**Fetch origin shows instead of Push origin, but GitHub.com repo is empty**
+GitHub Desktop may be connected to the wrong GitHub account. Check your actual username on GitHub.com (profile icon → top right) and confirm the repo exists under **Your repositories**. If the repo is under a different account or organisation, update the remote URL in **Repository → Repository Settings**.
+
+**404 on the GitHub.com URL**
+The repo name or account in the URL is wrong. Navigate to your correct account → Your repositories to find the exact URL.
+
+---
+
 ## Updating the site
 
 Any time you make changes locally:

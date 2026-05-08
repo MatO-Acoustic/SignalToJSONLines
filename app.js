@@ -15,6 +15,7 @@
   const signalDropZone    = document.getElementById('signal-drop-zone');
   const signalFileInput   = document.getElementById('signal-file-input');
   const signalParseStatus = document.getElementById('signal-parse-status');
+  const signalJsonInput   = document.getElementById('signal-json-input');
   const signalSummary     = document.getElementById('signal-summary');
   const signalTypeDisplay = document.getElementById('signal-type-display');
   const signalIdDisplay   = document.getElementById('signal-identifier-display');
@@ -22,6 +23,9 @@
   const testFlagInput     = document.getElementById('test-flag');
   const emptyHint         = document.getElementById('signal-empty-hint');
   const signalStepBadge   = document.getElementById('signal-step-badge');
+
+  // ── Element refs — Reset ────────────────────────────────────
+  const resetBtn = document.getElementById('reset-btn');
 
   // ── Element refs — Step 2 ───────────────────────────────────
   const dropZone   = document.getElementById('drop-zone');
@@ -66,66 +70,95 @@
   async function handleSignalFile(file) {
     showSignalStatus('', '');
     try {
-      const text   = await file.text();
-      const parsed = JSON.parse(text);
-
-      // Accept {"signal": {...}} or the inner object directly
-      const s = parsed.signal || parsed;
-
-      if (!s.signalContent) {
-        throw new Error('No signalContent found. Make sure the file is a valid blank signal.');
-      }
-      if (!s.identifiableAttributes) {
-        throw new Error('No identifiableAttributes found. The signal must include an identifier (email, sms, whatsapp, or contactKey).');
-      }
-
-      const idKeys = Object.keys(s.identifiableAttributes);
-      if (!idKeys.length) {
-        throw new Error('identifiableAttributes is empty — must contain at least one identifier key.');
-      }
-
-      const extractedSignalType     = s.signalContent.signalType || '';
-      const extractedIdentifierType = idKeys[0];
-
-      // Pre-populate appKey if the template carries one and the field is still empty
-      if (s.appKey && !appKeyInput.value.trim()) {
-        appKeyInput.value = s.appKey;
-        appKey = s.appKey;
-      }
-
-      // Build the prefixed field list
-      // 1. Contact identifier
-      const fields = [`identifier:${extractedIdentifierType}`];
-      // 2. Signal content fields (signalType is fixed — exclude from mapping)
-      Object.keys(s.signalContent).forEach(k => {
-        if (k !== 'signalType') fields.push(`content:${k}`);
-      });
-      // 3. sessionId is always offered as optional
-      fields.push('session:sessionId');
-
-      signalType     = extractedSignalType;
-      identifierType = extractedIdentifierType;
-      signalFields   = fields;
-
-      showSignalStatus(`${file.name} — parsed successfully`, 'success');
-      renderSignalSummary();
-
-      if (parsedHeaders.length && isStep1Ready()) {
-        Mapper.init(signalFields, parsedHeaders);
-        renderMappingTable();
-        updatePreview();
-      }
-      onStep1Changed();
-
+      const text = await file.text();
+      parseSignalJson(text, file.name);
+      signalJsonInput.value = '';
     } catch (err) {
-      showSignalStatus('Error: ' + err.message, 'error');
-      signalType     = '';
-      identifierType = '';
-      signalFields   = [];
-      signalSummary.classList.add('hidden');
-      onStep1Changed();
+      showSignalStatus('Error reading file: ' + err.message, 'error');
     }
   }
+
+  function parseSignalJson(text, sourceName) {
+    const parsed = JSON.parse(text);
+
+    // Accept {"signal": {...}} or the inner object directly
+    const s = parsed.signal || parsed;
+
+    if (!s.signalContent) {
+      throw new Error('No signalContent found. Make sure this is a valid blank signal.');
+    }
+    if (!s.identifiableAttributes) {
+      throw new Error('No identifiableAttributes found. The signal must include an identifier (email, sms, whatsapp, or contactKey).');
+    }
+
+    const idKeys = Object.keys(s.identifiableAttributes);
+    if (!idKeys.length) {
+      throw new Error('identifiableAttributes is empty — must contain at least one identifier key.');
+    }
+
+    const extractedSignalType     = s.signalContent.signalType || '';
+    const extractedIdentifierType = idKeys[0];
+
+    // Pre-populate appKey if the template carries one and the field is still empty
+    if (s.appKey && !appKeyInput.value.trim()) {
+      appKeyInput.value = s.appKey;
+      appKey = s.appKey;
+    }
+
+    // Build the prefixed field list
+    // 1. Contact identifier
+    const fields = [`identifier:${extractedIdentifierType}`];
+    // 2. Signal content fields (signalType is fixed — exclude from mapping)
+    Object.keys(s.signalContent).forEach(k => {
+      if (k !== 'signalType') fields.push(`content:${k}`);
+    });
+    // 3. signalTimestamp: always available — affects 30-day activity feed window
+    if (!fields.includes('content:signalTimestamp')) fields.push('content:signalTimestamp');
+    // 4. sessionId is always offered as optional
+    fields.push('session:sessionId');
+
+    signalType     = extractedSignalType;
+    identifierType = extractedIdentifierType;
+    signalFields   = fields;
+
+    showSignalStatus(`${sourceName} — parsed successfully`, 'success');
+    renderSignalSummary();
+
+    if (parsedHeaders.length && isStep1Ready()) {
+      Mapper.init(signalFields, parsedHeaders);
+      renderMappingTable();
+      updatePreview();
+    }
+    onStep1Changed();
+  }
+
+  // ── Step 1: Paste JSON ───────────────────────────────────────
+
+  let _pasteDebounce = null;
+  signalJsonInput.addEventListener('input', () => {
+    clearTimeout(_pasteDebounce);
+    const val = signalJsonInput.value.trim();
+
+    if (!val) {
+      showSignalStatus('', '');
+      signalType = ''; identifierType = ''; signalFields = [];
+      signalSummary.classList.add('hidden');
+      onStep1Changed();
+      return;
+    }
+
+    _pasteDebounce = setTimeout(() => {
+      try {
+        parseSignalJson(val, 'pasted JSON');
+        signalFileInput.value = '';
+      } catch (err) {
+        showSignalStatus('Error: ' + err.message, 'error');
+        signalType = ''; identifierType = ''; signalFields = [];
+        signalSummary.classList.add('hidden');
+        onStep1Changed();
+      }
+    }, 400);
+  });
 
   function showSignalStatus(msg, type) {
     signalParseStatus.textContent = msg;
@@ -318,6 +351,36 @@
   function updateDownloadHint() {
     const today = new Date().toISOString().slice(0, 10);
     downloadHintEl.textContent = `${signalType || 'signal'}_${today}.jsonl`;
+  }
+
+  // ── Reset ─────────────────────────────────────────────────────
+
+  resetBtn.addEventListener('click', resetApp);
+
+  function resetApp() {
+    appKey = ''; signalType = ''; identifierType = ''; testFlag = false;
+    signalFields = []; parsedHeaders = []; parsedData = [];
+
+    appKeyInput.value      = '';
+    signalFileInput.value  = '';
+    signalJsonInput.value  = '';
+    fileInput.value        = '';
+    testFlagInput.checked  = false;
+
+    Mapper.reset();
+
+    showSignalStatus('', '');
+    signalSummary.classList.add('hidden');
+    showFileStatus('', '');
+    mappingTbody.innerHTML = '';
+
+    stepMapping.classList.add('hidden');
+    stepPreview.classList.add('hidden');
+    stepDownload.classList.add('hidden');
+
+    onStep1Changed();
+    updateDownloadHint();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   // ── Utility ───────────────────────────────────────────────────

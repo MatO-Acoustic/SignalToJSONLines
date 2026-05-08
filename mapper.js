@@ -16,8 +16,9 @@ const Mapper = (() => {
 
   // Human-readable label for dropdown display
   function getLabel(field) {
-    if (!field || field === '__ignore__') return 'Ignore column';
-    if (field === 'session:sessionId')    return 'sessionId (optional)';
+    if (!field || field === '__ignore__')          return 'Ignore column';
+    if (field === 'session:sessionId')             return 'sessionId (optional)';
+    if (field === 'content:signalTimestamp')       return 'signalTimestamp (30-day window)';
     if (field.startsWith('identifier:')) return fieldName(field) + ' (identifier)';
     if (field.startsWith('content:'))    return fieldName(field);
     return field;
