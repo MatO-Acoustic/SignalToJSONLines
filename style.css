@@ -1,0 +1,573 @@
+/* ============================================================
+   Brand tokens
+   ============================================================ */
+:root {
+  --violet:      #1F1E5D;
+  --periwinkle:  #706CFF;
+  --green:       #00DF8F;
+  --lime:        #C8FF49;
+  --grey-light:  #EFEFEF;
+  --grey-mid:    #D0D1D8;
+  --grey-dark:   #5A5D77;
+  --white:       #FFFFFF;
+
+  --radius:      8px;
+  --radius-sm:   4px;
+  --font-head:   'Bricolage Grotesque', system-ui, sans-serif;
+  --font-body:   system-ui, -apple-system, sans-serif;
+  --font-mono:   'Menlo', 'Consolas', 'Monaco', monospace;
+}
+
+/* ============================================================
+   Reset / base
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.6;
+  background: var(--grey-light);
+  color: var(--violet);
+}
+
+/* ============================================================
+   Header
+   ============================================================ */
+header {
+  background: var(--violet);
+  padding: 2rem 0 2.5rem;
+}
+
+.header-inner {
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+.logo {
+  margin-bottom: 1.25rem;
+}
+
+.acoustic-logo {
+  height: 28px;
+  width: auto;
+  /* Invert dark violet wordmark + periwinkle mark → all white on dark header */
+  filter: brightness(0) invert(1);
+  display: block;
+}
+
+header h1 {
+  font-family: var(--font-head);
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0 0 0.4rem;
+  color: var(--white);
+  letter-spacing: -0.01em;
+}
+
+.subtitle {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--grey-dark);
+  max-width: 560px;
+}
+
+/* ============================================================
+   Main layout
+   ============================================================ */
+main {
+  max-width: 820px;
+  margin: 2rem auto 3rem;
+  padding: 0 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* ============================================================
+   Step cards
+   ============================================================ */
+.step {
+  background: var(--white);
+  border-radius: var(--radius);
+  border: 1px solid var(--grey-mid);
+  overflow: hidden;
+}
+
+.step.hidden { display: none !important; }
+
+.step-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.875rem 1.25rem;
+  background: var(--grey-light);
+  border-bottom: 1px solid var(--grey-mid);
+}
+
+.step-num {
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 50%;
+  background: var(--periwinkle);
+  color: var(--white);
+  font-family: var(--font-head);
+  font-weight: 700;
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.step-header h2 {
+  font-family: var(--font-head);
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin: 0;
+  flex: 1;
+}
+
+.step-badge {
+  font-size: 0.73rem;
+  background: var(--green);
+  color: var(--violet);
+  padding: 0.18rem 0.6rem;
+  border-radius: 999px;
+  font-weight: 700;
+  font-family: var(--font-head);
+  white-space: nowrap;
+}
+
+.step-body {
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.step-body.no-pad { padding: 0; }
+
+/* ============================================================
+   Form elements
+   ============================================================ */
+.field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.field-row {
+  display: flex;
+  gap: 1rem;
+}
+
+.field-row .field-group { flex: 1; }
+
+label {
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--violet);
+}
+
+.hint {
+  font-weight: 400;
+  color: var(--grey-dark);
+  font-size: 0.78rem;
+  margin-left: 0.4rem;
+}
+
+input[type="text"],
+textarea {
+  border: 1px solid var(--grey-mid);
+  border-radius: var(--radius);
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  font-family: var(--font-body);
+  color: var(--violet);
+  background: var(--white);
+  width: 100%;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+input[type="text"]:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--periwinkle);
+  box-shadow: 0 0 0 3px rgba(112, 108, 255, 0.15);
+}
+
+textarea {
+  resize: vertical;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  line-height: 1.6;
+}
+
+/* ============================================================
+   Buttons
+   ============================================================ */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.5rem 1.1rem;
+  border-radius: var(--radius);
+  font-family: var(--font-head);
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  border: none;
+  transition: opacity 0.15s, transform 0.1s;
+  white-space: nowrap;
+}
+
+.btn:hover  { opacity: 0.85; }
+.btn:active { transform: scale(0.98); }
+
+.btn-primary   { background: var(--periwinkle); color: var(--white); }
+.btn-secondary { background: var(--violet);     color: var(--white); align-self: flex-start; }
+.btn-ghost     { background: transparent; color: var(--periwinkle); border: 1.5px solid var(--periwinkle); }
+
+.btn-large {
+  padding: 0.75rem 2rem;
+  font-size: 0.95rem;
+}
+
+/* ============================================================
+   Signal tags
+   ============================================================ */
+.tag-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  min-height: 1.8rem;
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: var(--grey-light);
+  border: 1px solid var(--grey-mid);
+  border-radius: 999px;
+  padding: 0.2rem 0.6rem 0.2rem 0.75rem;
+  font-size: 0.78rem;
+  font-family: var(--font-mono);
+  color: var(--violet);
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.tag.claimed {
+  background: rgba(0, 223, 143, 0.15);
+  border-color: var(--green);
+  color: var(--violet);
+}
+
+.tag-remove {
+  cursor: pointer;
+  color: var(--grey-dark);
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 1rem;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  transition: color 0.1s;
+}
+
+.tag-remove:hover { color: var(--violet); }
+
+.add-field-row {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.add-field-row input { flex: 1; }
+
+.empty-hint {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--grey-dark);
+  font-style: italic;
+}
+
+/* ============================================================
+   Drop zone
+   ============================================================ */
+.drop-zone {
+  border: 2px dashed var(--grey-mid);
+  border-radius: var(--radius);
+  padding: 2.5rem 1.5rem;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  user-select: none;
+}
+
+.drop-zone:hover,
+.drop-zone.dragover {
+  border-color: var(--periwinkle);
+  background: rgba(112, 108, 255, 0.04);
+}
+
+.drop-icon { margin-bottom: 0.75rem; }
+
+.drop-zone p {
+  margin: 0.2rem 0;
+  color: var(--grey-dark);
+  font-size: 0.875rem;
+}
+
+.file-label {
+  color: var(--periwinkle);
+  cursor: pointer;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.file-types {
+  font-size: 0.78rem !important;
+  margin-top: 0.4rem !important;
+}
+
+.file-status {
+  padding: 0.65rem 1rem;
+  border-radius: var(--radius);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.file-status.success {
+  background: rgba(0, 223, 143, 0.12);
+  color: #005c3a;
+  border: 1px solid var(--green);
+}
+
+.file-status.error {
+  background: #fff2f2;
+  color: #c0392b;
+  border: 1px solid #e74c3c;
+}
+
+.hidden { display: none !important; }
+
+/* ============================================================
+   Mapping table
+   ============================================================ */
+#mapping-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+#mapping-table th {
+  text-align: left;
+  padding: 0.6rem 1.25rem;
+  background: var(--grey-light);
+  color: var(--grey-dark);
+  font-size: 0.73rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 600;
+  border-bottom: 1px solid var(--grey-mid);
+}
+
+#mapping-table td {
+  padding: 0.55rem 1.25rem;
+  border-bottom: 1px solid var(--grey-light);
+  vertical-align: middle;
+}
+
+#mapping-table tbody tr:last-child td { border-bottom: none; }
+
+#mapping-table tbody tr:hover td { background: rgba(112, 108, 255, 0.03); }
+
+.col-name {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--violet);
+}
+
+.mapping-select {
+  width: 100%;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid var(--grey-mid);
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  color: var(--violet);
+  background: var(--white);
+  cursor: pointer;
+  font-family: var(--font-body);
+  transition: border-color 0.15s;
+}
+
+.mapping-select:focus {
+  outline: none;
+  border-color: var(--periwinkle);
+  box-shadow: 0 0 0 2px rgba(112, 108, 255, 0.15);
+}
+
+.mapping-select option:disabled { color: var(--grey-mid); }
+
+.status-badge {
+  display: inline-block;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.73rem;
+  font-weight: 700;
+  font-family: var(--font-head);
+  white-space: nowrap;
+}
+
+.status-badge.matched   { background: rgba(0, 223, 143, 0.2); color: #005c3a; }
+.status-badge.unmatched { background: rgba(112, 108, 255, 0.15); color: var(--periwinkle); }
+.status-badge.ignored   { background: var(--grey-light); color: var(--grey-dark); }
+
+/* ============================================================
+   Preview
+   ============================================================ */
+.preview-note {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--grey-dark);
+}
+
+.preview-block {
+  margin: 0;
+  background: var(--violet);
+  color: var(--lime);
+  padding: 1.25rem;
+  border-radius: var(--radius);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  line-height: 1.8;
+  overflow-x: auto;
+  white-space: pre;
+}
+
+/* ============================================================
+   Download
+   ============================================================ */
+.download-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.download-hint {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--grey-dark);
+  font-family: var(--font-mono);
+}
+
+/* ============================================================
+   Required star
+   ============================================================ */
+.required-star {
+  color: #e74c3c;
+  margin-left: 2px;
+}
+
+/* ============================================================
+   Compact drop zone (blank signal upload)
+   ============================================================ */
+.drop-zone--compact {
+  padding: 1.1rem 1.5rem;
+}
+
+.drop-zone--compact p {
+  font-size: 0.85rem;
+}
+
+/* ============================================================
+   Signal summary (shown after parsing blank signal)
+   ============================================================ */
+.signal-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0.875rem 1rem;
+  background: rgba(112, 108, 255, 0.05);
+  border: 1px solid rgba(112, 108, 255, 0.2);
+  border-radius: var(--radius);
+}
+
+.signal-meta-row {
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.signal-meta-chip {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.meta-label {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--grey-dark);
+  font-weight: 600;
+}
+
+.meta-value {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--violet);
+  font-weight: 600;
+}
+
+/* ============================================================
+   Identifier status badge variant
+   ============================================================ */
+.status-badge.identifier {
+  background: rgba(200, 255, 73, 0.3);
+  color: #3a4800;
+}
+
+/* ============================================================
+   Checkbox group
+   ============================================================ */
+.checkbox-group {
+  padding-top: 0.15rem;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-weight: 400;
+  font-size: 0.875rem;
+  color: var(--grey-dark);
+}
+
+.checkbox-label input[type="checkbox"] {
+  margin-top: 0.2rem;
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+  accent-color: var(--periwinkle);
+  cursor: pointer;
+}
+
+/* ============================================================
+   Footer
+   ============================================================ */
+footer {
+  text-align: center;
+  padding: 1.5rem 1rem 2.5rem;
+  font-size: 0.78rem;
+  color: var(--grey-dark);
+}
+
+footer p { margin: 0; }

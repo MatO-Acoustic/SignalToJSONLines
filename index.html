@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Signal to JSON Lines — Acoustic Connect</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <link rel="icon" type="image/png" href="favicon-32x32.png" />
+  <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+
+  <header>
+    <div class="header-inner">
+      <div class="logo">
+        <img src="AcousticLogo.svg" alt="Acoustic" class="acoustic-logo" />
+      </div>
+      <h1>Signal &rarr; JSON Lines</h1>
+      <p class="subtitle">Generate a Connect SFTP batch file from your CSV or Excel data &mdash; all processing happens in your browser.</p>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- Step 1: Define Signal -->
+    <section class="step" id="step-signal">
+      <div class="step-header">
+        <span class="step-num">1</span>
+        <h2>Define Signal</h2>
+        <span id="signal-step-badge" class="step-badge hidden"></span>
+      </div>
+      <div class="step-body">
+
+        <div class="field-group">
+          <label for="app-key">App key <span class="required-star">*</span></label>
+          <input type="text" id="app-key" placeholder="e.g. app_abc123" autocomplete="off" spellcheck="false" />
+        </div>
+
+        <div class="field-group">
+          <label>
+            Blank signal template <span class="required-star">*</span>
+            <span class="hint">Upload a blank .json signal file to extract the field structure</span>
+          </label>
+          <div id="signal-drop-zone" class="drop-zone drop-zone--compact" role="button" tabindex="0" aria-label="Upload blank signal JSON">
+            <p>Drag &amp; drop a .json file, or <label for="signal-file-input" class="file-label">browse</label></p>
+            <input type="file" id="signal-file-input" accept=".json" hidden />
+          </div>
+          <div id="signal-parse-status" class="file-status hidden"></div>
+        </div>
+
+        <div id="signal-summary" class="signal-summary hidden">
+          <div class="signal-meta-row">
+            <div class="signal-meta-chip">
+              <span class="meta-label">Signal type</span>
+              <span id="signal-type-display" class="meta-value"></span>
+            </div>
+            <div class="signal-meta-chip">
+              <span class="meta-label">Identifier</span>
+              <span id="signal-identifier-display" class="meta-value"></span>
+            </div>
+          </div>
+          <div id="signal-content-fields" class="tag-group"></div>
+        </div>
+
+        <div class="field-group checkbox-group">
+          <label class="checkbox-label">
+            <input type="checkbox" id="test-flag" />
+            <span>Test mode &mdash; signals validate but won&rsquo;t affect campaigns or reports</span>
+          </label>
+        </div>
+
+        <p id="signal-empty-hint" class="empty-hint">Upload a blank signal template and enter your app key to continue.</p>
+      </div>
+    </section>
+
+    <!-- Step 2: Upload Source File -->
+    <section class="step" id="step-upload">
+      <div class="step-header">
+        <span class="step-num">2</span>
+        <h2>Upload Source File</h2>
+      </div>
+      <div class="step-body">
+        <div id="drop-zone" class="drop-zone" role="button" tabindex="0" aria-label="Upload file">
+          <div class="drop-icon" aria-hidden="true">
+            <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+              <path d="M16 22V10M16 10L10 16M16 10L22 16" stroke="#706CFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <rect x="4" y="24" width="24" height="2" rx="1" fill="#706CFF" opacity="0.3"/>
+            </svg>
+          </div>
+          <p>Drag &amp; drop your file here, or <label for="file-input" class="file-label">browse</label></p>
+          <p class="file-types">Accepts .csv &nbsp;&middot;&nbsp; .xlsx &nbsp;&middot;&nbsp; .xls</p>
+          <input type="file" id="file-input" accept=".csv,.xlsx,.xls" hidden />
+        </div>
+        <div id="file-status" class="file-status hidden" role="status"></div>
+      </div>
+    </section>
+
+    <!-- Step 3: Mapping -->
+    <section class="step hidden" id="step-mapping">
+      <div class="step-header">
+        <span class="step-num">3</span>
+        <h2>Map Columns</h2>
+        <span id="mapping-summary" class="step-badge"></span>
+      </div>
+      <div class="step-body no-pad">
+        <table id="mapping-table">
+          <thead>
+            <tr>
+              <th>Source column</th>
+              <th>Maps to</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="mapping-tbody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Step 4: Preview -->
+    <section class="step hidden" id="step-preview">
+      <div class="step-header">
+        <span class="step-num">4</span>
+        <h2>Preview Output</h2>
+        <span id="row-count" class="step-badge"></span>
+      </div>
+      <div class="step-body">
+        <p class="preview-note">Showing first 5 rows &mdash; all mapped fields included, ignored columns excluded.</p>
+        <pre id="preview-block" class="preview-block" aria-label="JSON Lines preview"></pre>
+      </div>
+    </section>
+
+    <!-- Step 5: Download -->
+    <section class="step hidden" id="step-download">
+      <div class="step-header">
+        <span class="step-num">5</span>
+        <h2>Download</h2>
+      </div>
+      <div class="step-body">
+        <div class="download-row">
+          <button id="download-btn" class="btn btn-primary btn-large">&#8595;&nbsp; Download .jsonl</button>
+          <p class="download-hint" id="download-hint"></p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer>
+    <p>Data never leaves your browser &mdash; all processing is client-side only.</p>
+  </footer>
+
+  <script src="parser.js"></script>
+  <script src="mapper.js"></script>
+  <script src="exporter.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
